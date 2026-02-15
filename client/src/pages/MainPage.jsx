@@ -1,193 +1,705 @@
 import { useMemo, useState } from "react";
-import { Dialog, DialogPanel } from "@headlessui/react";
 import {
-  Bars3Icon,
-  MapPinIcon,
+  CalendarDaysIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   MagnifyingGlassIcon,
-  SparklesIcon,
-  XMarkIcon,
+  MapPinIcon,
 } from "@heroicons/react/24/outline";
 import logo from "../assets/logo.png";
+import cinema1Main from "../assets/cinema1.jpg";
+import cinema1Alt1 from "../assets/cinema1-1.jpg";
+import cinema1Alt2 from "../assets/cinema1-2.jpg";
+import cinema2Main from "../assets/cinema2.jpg";
+import cinema2Alt1 from "../assets/cinema2-1.jpg";
+import cinema2Alt2 from "../assets/cinema2-2.jpg";
+import movie1 from "../assets/movie1.jpg";
+import movie2 from "../assets/movie2.webp";
+import movie3 from "../assets/movie3.webp";
+import movie4 from "../assets/movie4.webp";
+import movie5 from "../assets/movie5.webp";
+import movie6 from "../assets/movie6.webp";
+import movie7 from "../assets/movie7.webp";
+import movie8 from "../assets/movie8.webp";
+import movie9child from "../assets/movie9child.webp";
+import movie10child from "../assets/movie10child.webp";
+import movie11child from "../assets/movie11child.png";
+import movie12 from "../assets/movie12.webp";
 
-const roles = [
-  { value: "guest", label: "Гость" },
-  { value: "user", label: "Пользователь" },
-  { value: "admin", label: "Админ" },
-];
+const navButtons = ["Афиша", "Расписание", "Кинотеатры", "Акции"];
 
-const cinemas = [
+const cinemaCards = [
   {
-    name: "Neon Cinema Downtown",
+    id: "cinema-1",
+    name: "Cinema Star",
     city: "Москва",
-    address: "ул. Тверская, 12",
-    halls: 8,
-    seats: 1240,
+    description:
+      "Флагманский кинотеатр в центре города с премиальными залами, Dolby Atmos и отдельной lounge-зоной.",
+    advantages: ["IMAX и Dolby Atmos", "Реклайнер-кресла", "Фуд-корт и лаунж"],
+    images: [cinema1Main, cinema1Alt1, cinema1Alt2],
   },
   {
-    name: "Blue Hall Arena",
+    id: "cinema-2",
+    name: "Nova Cinema",
     city: "Санкт-Петербург",
-    address: "Невский пр., 43",
-    halls: 6,
-    seats: 910,
-  },
-  {
-    name: "Lumen Park",
-    city: "Казань",
-    address: "пр. Победы, 91",
-    halls: 5,
-    seats: 760,
-  },
-  {
-    name: "Neon Cinema Downtown",
-    city: "Москва",
-    address: "ул. Тверская, 12",
-    halls: 8,
-    seats: 1240,
-  },
-  {
-    name: "Blue Hall Arena",
-    city: "Санкт-Петербург",
-    address: "Невский пр., 43",
-    halls: 6,
-    seats: 910,
-  },
-  {
-    name: "Lumen Park",
-    city: "Казань",
-    address: "пр. Победы, 91",
-    halls: 5,
-    seats: 760,
-  },
-  {
-    name: "Neon Cinema Downtown",
-    city: "Москва",
-    address: "ул. Тверская, 12",
-    halls: 8,
-    seats: 1240,
-  },
-  {
-    name: "Blue Hall Arena",
-    city: "Санкт-Петербург",
-    address: "Невский пр., 43",
-    halls: 6,
-    seats: 910,
-  },
-  {
-    name: "Lumen Park",
-    city: "Казань",
-    address: "пр. Победы, 91",
-    halls: 5,
-    seats: 760,
-  },
-
-  {
-    name: "Aurora Screen",
-    city: "Новосибирск",
-    address: "ул. Ленина, 3",
-    halls: 7,
-    seats: 1030,
-  },
-  {
-    name: "Pixel Movie Point",
-    city: "Екатеринбург",
-    address: "ул. Малышева, 26",
-    halls: 4,
-    seats: 640,
-  },
-  {
-    name: "Lumen Park",
-    city: "Казань",
-    address: "пр. Победы, 91",
-    halls: 5,
-    seats: 760,
-  },
-  {
-    name: "Aurora Screen",
-    city: "Новосибирск",
-    address: "ул. Ленина, 3",
-    halls: 7,
-    seats: 1030,
-  },
-  {
-    name: "Pixel Movie Point",
-    city: "Екатеринбург",
-    address: "ул. Малышева, 26",
-    halls: 4,
-    seats: 640,
-  },
-  {
-    name: "Lumen Park",
-    city: "Казань",
-    address: "пр. Победы, 91",
-    halls: 5,
-    seats: 760,
-  },
-  {
-    name: "Aurora Screen",
-    city: "Новосибирск",
-    address: "ул. Ленина, 3",
-    halls: 7,
-    seats: 1030,
-  },
-  {
-    name: "Pixel Movie Point",
-    city: "Екатеринбург",
-    address: "ул. Малышева, 26",
-    halls: 4,
-    seats: 640,
+    description:
+      "Современный киноцентр у набережной: просторные залы, удобная парковка и семейные форматы показов.",
+    advantages: [
+      "Детские утренние сеансы",
+      "Бесплатная парковка",
+      "VIP-зал с сервисом",
+    ],
+    images: [cinema2Main, cinema2Alt1, cinema2Alt2],
   },
 ];
 
-function AuthAction({ role }) {
-  if (role === "guest") {
-    return (
-      <button className="btn-glossy rounded-xl px-4 py-2 text-sm font-semibold">
-        Вход / Регистрация
-      </button>
-    );
-  }
+const scheduleMovies = [
+  {
+    id: "movie-1",
+    title: "Аватар: Пламя и пепел",
+    genre: "Фантастика, Приключения",
+    duration: "3ч 20м",
+    rating: "12+",
+    poster: movie1,
+    screenings: [
+      {
+        dayOffset: 0,
+        time: "16:40",
+        price: 600,
+        format: "2D",
+        hall: "Зал 4",
+        cinema: "Cinema Star",
+      },
+      {
+        dayOffset: 0,
+        time: "19:30",
+        price: 800,
+        format: "IMAX",
+        hall: "Зал 1",
+        cinema: "Cinema Star",
+      },
+      {
+        dayOffset: 1,
+        time: "18:20",
+        price: 650,
+        format: "2D",
+        hall: "Зал 2",
+        cinema: "Nova Cinema",
+      },
+      {
+        dayOffset: 2,
+        time: "21:10",
+        price: 700,
+        format: "Dolby",
+        hall: "Зал 3",
+        cinema: "Cinema Star",
+      },
+      {
+        dayOffset: 3,
+        time: "23:30",
+        price: 760,
+        format: "2D",
+        hall: "VIP",
+        cinema: "Nova Cinema",
+      },
+    ],
+  },
+  {
+    id: "movie-2",
+    title: "Грозовой перевал",
+    genre: "Мелодрама, Драма",
+    duration: "2ч 30м",
+    rating: "16+",
+    poster: movie2,
+    screenings: [
+      {
+        dayOffset: 0,
+        time: "14:10",
+        price: 500,
+        format: "2D",
+        hall: "Зал 5",
+        cinema: "Nova Cinema",
+      },
+      {
+        dayOffset: 1,
+        time: "17:50",
+        price: 650,
+        format: "2D",
+        hall: "Зал 2",
+        cinema: "Cinema Star",
+      },
+      {
+        dayOffset: 2,
+        time: "11:40",
+        price: 520,
+        format: "2D",
+        hall: "Зал 2",
+        cinema: "Cinema Star",
+      },
+      {
+        dayOffset: 3,
+        time: "20:40",
+        price: 700,
+        format: "2D",
+        hall: "Зал 1",
+        cinema: "Nova Cinema",
+      },
+    ],
+  },
+  {
+    id: "movie-3",
+    title: "На помощь!",
+    genre: "Триллер",
+    duration: "2ч 10м",
+    rating: "18+",
+    poster: movie3,
+    screenings: [
+      {
+        dayOffset: 0,
+        time: "13:20",
+        price: 580,
+        format: "2D",
+        hall: "Зал 3",
+        cinema: "Cinema Star",
+      },
+      {
+        dayOffset: 1,
+        time: "18:40",
+        price: 700,
+        format: "Dolby",
+        hall: "Зал 4",
+        cinema: "Nova Cinema",
+      },
+      {
+        dayOffset: 2,
+        time: "22:10",
+        price: 760,
+        format: "2D",
+        hall: "Зал 6",
+        cinema: "Cinema Star",
+      },
+      {
+        dayOffset: 3,
+        time: "23:50",
+        price: 820,
+        format: "2D",
+        hall: "VIP",
+        cinema: "Nova Cinema",
+      },
+    ],
+  },
+  {
+    id: "movie-4",
+    title: "Казнить нельзя помиловать",
+    genre: "Триллер, Боевик, Детектив, Криминал, Фантастика, Драма",
+    duration: "1ч 55м",
+    rating: "16+",
+    poster: movie4,
+    screenings: [
+      {
+        dayOffset: 0,
+        time: "22:20",
+        price: 750,
+        format: "2D",
+        hall: "Зал 6",
+        cinema: "Cinema Star",
+      },
+      {
+        dayOffset: 1,
+        time: "20:00",
+        price: 700,
+        format: "Dolby",
+        hall: "Зал 2",
+        cinema: "Nova Cinema",
+      },
+      {
+        dayOffset: 2,
+        time: "23:10",
+        price: 800,
+        format: "2D",
+        hall: "VIP",
+        cinema: "Cinema Star",
+      },
+      {
+        dayOffset: 3,
+        time: "16:10",
+        price: 640,
+        format: "2D",
+        hall: "Зал 3",
+        cinema: "Nova Cinema",
+      },
+    ],
+  },
+  {
+    id: "movie-5",
+    title: "Горничная",
+    genre: "Триллер",
+    duration: "2ч 25м",
+    rating: "16+",
+    poster: movie5,
+    screenings: [
+      {
+        dayOffset: 0,
+        time: "12:00",
+        price: 540,
+        format: "2D",
+        hall: "Зал 2",
+        cinema: "Nova Cinema",
+      },
+      {
+        dayOffset: 1,
+        time: "16:30",
+        price: 630,
+        format: "2D",
+        hall: "Зал 5",
+        cinema: "Cinema Star",
+      },
+      {
+        dayOffset: 2,
+        time: "20:20",
+        price: 710,
+        format: "2D",
+        hall: "Зал 4",
+        cinema: "Nova Cinema",
+      },
+      {
+        dayOffset: 3,
+        time: "22:40",
+        price: 790,
+        format: "Dolby",
+        hall: "VIP",
+        cinema: "Cinema Star",
+      },
+    ],
+  },
+  {
+    id: "movie-6",
+    title: "Свист",
+    genre: "Хоррор",
+    duration: "1ч 50м",
+    rating: "18+",
+    poster: movie6,
+    screenings: [
+      {
+        dayOffset: 0,
+        time: "15:10",
+        price: 610,
+        format: "2D",
+        hall: "Зал 1",
+        cinema: "Cinema Star",
+      },
+      {
+        dayOffset: 1,
+        time: "21:20",
+        price: 760,
+        format: "2D",
+        hall: "Зал 3",
+        cinema: "Nova Cinema",
+      },
+      {
+        dayOffset: 2,
+        time: "23:15",
+        price: 830,
+        format: "Dolby",
+        hall: "Зал 2",
+        cinema: "Cinema Star",
+      },
+      {
+        dayOffset: 3,
+        time: "10:40",
+        price: 470,
+        format: "2D",
+        hall: "Зал 5",
+        cinema: "Nova Cinema",
+      },
+    ],
+  },
+  {
+    id: "movie-7",
+    title: "Опасный дуэт",
+    genre: "Комедия, Боевик",
+    duration: "2ч 15м",
+    rating: "16+",
+    poster: movie7,
+    screenings: [
+      {
+        dayOffset: 0,
+        time: "11:15",
+        price: 500,
+        format: "2D",
+        hall: "Зал 2",
+        cinema: "Cinema Star",
+      },
+      {
+        dayOffset: 1,
+        time: "14:50",
+        price: 620,
+        format: "2D",
+        hall: "Зал 1",
+        cinema: "Nova Cinema",
+      },
+      {
+        dayOffset: 2,
+        time: "19:40",
+        price: 730,
+        format: "Dolby",
+        hall: "Зал 4",
+        cinema: "Cinema Star",
+      },
+      {
+        dayOffset: 3,
+        time: "21:55",
+        price: 780,
+        format: "2D",
+        hall: "Зал 6",
+        cinema: "Nova Cinema",
+      },
+    ],
+  },
+  {
+    id: "movie-8",
+    title: "Возвращение в Сайлент Хилл",
+    genre: "Хоррор",
+    duration: "2ч",
+    rating: "16+",
+    poster: movie8,
+    screenings: [
+      {
+        dayOffset: 0,
+        time: "18:00",
+        price: 650,
+        format: "2D",
+        hall: "Зал 3",
+        cinema: "Nova Cinema",
+      },
+      {
+        dayOffset: 1,
+        time: "12:30",
+        price: 560,
+        format: "2D",
+        hall: "Зал 3",
+        cinema: "Cinema Star",
+      },
+      {
+        dayOffset: 2,
+        time: "21:30",
+        price: 780,
+        format: "2D",
+        hall: "Зал 1",
+        cinema: "Cinema Star",
+      },
+      {
+        dayOffset: 3,
+        time: "23:40",
+        price: 720,
+        format: "2D",
+        hall: "Зал 4",
+        cinema: "Nova Cinema",
+      },
+    ],
+  },
+  {
+    id: "movie-9",
+    title: "Зверополис 2",
+    genre: "Комедия, Боевик, Мультфильм, Приключения, Семейный",
+    duration: "2ч",
+    rating: "6+",
+    poster: movie9child,
+    screenings: [
+      {
+        dayOffset: 0,
+        time: "10:20",
+        price: 450,
+        format: "2D",
+        hall: "Зал 5",
+        cinema: "Nova Cinema",
+      },
+      {
+        dayOffset: 1,
+        time: "13:10",
+        price: 520,
+        format: "2D",
+        hall: "Зал 2",
+        cinema: "Cinema Star",
+      },
+      {
+        dayOffset: 2,
+        time: "16:00",
+        price: 590,
+        format: "2D",
+        hall: "Зал 1",
+        cinema: "Nova Cinema",
+      },
+      {
+        dayOffset: 3,
+        time: "18:30",
+        price: 640,
+        format: "2D",
+        hall: "Зал 3",
+        cinema: "Cinema Star",
+      },
+    ],
+  },
+  {
+    id: "movie-10",
+    title: "Губка Боб: В поисках квадратных штанов",
+    genre: "Комедия, Мультфильм, Приключения, Семейный, Фэнтези",
+    duration: "1ч 45м",
+    rating: "6+",
+    poster: movie10child,
+    screenings: [
+      {
+        dayOffset: 0,
+        time: "09:40",
+        price: 430,
+        format: "2D",
+        hall: "Зал 1",
+        cinema: "Cinema Star",
+      },
+      {
+        dayOffset: 1,
+        time: "12:20",
+        price: 500,
+        format: "2D",
+        hall: "Зал 5",
+        cinema: "Nova Cinema",
+      },
+      {
+        dayOffset: 2,
+        time: "15:10",
+        price: 570,
+        format: "2D",
+        hall: "Зал 3",
+        cinema: "Cinema Star",
+      },
+      {
+        dayOffset: 3,
+        time: "17:20",
+        price: 620,
+        format: "2D",
+        hall: "Зал 2",
+        cinema: "Nova Cinema",
+      },
+    ],
+  },
+  {
+    id: "movie-11",
+    title: "Шрек",
+    genre: "Комедия, Мультфильм, Приключения, Семейный",
+    duration: "2ч 5м",
+    rating: "6+",
+    poster: movie11child,
+    screenings: [
+      {
+        dayOffset: 0,
+        time: "11:00",
+        price: 480,
+        format: "2D",
+        hall: "Зал 2",
+        cinema: "Nova Cinema",
+      },
+      {
+        dayOffset: 1,
+        time: "14:30",
+        price: 560,
+        format: "2D",
+        hall: "Зал 4",
+        cinema: "Cinema Star",
+      },
+      {
+        dayOffset: 2,
+        time: "17:40",
+        price: 620,
+        format: "2D",
+        hall: "Зал 5",
+        cinema: "Nova Cinema",
+      },
+      {
+        dayOffset: 3,
+        time: "20:10",
+        price: 680,
+        format: "2D",
+        hall: "Зал 1",
+        cinema: "Cinema Star",
+      },
+    ],
+  },
+  {
+    id: "movie-12",
+    title: "Заклятие: Обряд реинкарнации",
+    genre: "Хоррор",
+    duration: "1ч 45м",
+    rating: "18+",
+    poster: movie12,
+    screenings: [
+      {
+        dayOffset: 0,
+        time: "23:20",
+        price: 820,
+        format: "Dolby",
+        hall: "VIP",
+        cinema: "Nova Cinema",
+      },
+      {
+        dayOffset: 1,
+        time: "19:10",
+        price: 680,
+        format: "2D",
+        hall: "Зал 1",
+        cinema: "Cinema Star",
+      },
+      {
+        dayOffset: 2,
+        time: "17:00",
+        price: 590,
+        format: "2D",
+        hall: "Зал 5",
+        cinema: "Nova Cinema",
+      },
+      {
+        dayOffset: 3,
+        time: "22:00",
+        price: 760,
+        format: "2D",
+        hall: "Зал 2",
+        cinema: "Cinema Star",
+      },
+    ],
+  },
+];
 
-  if (role === "admin") {
-    return (
-      <button className="rounded-xl border border-fuchsia-300/40 bg-fuchsia-300/10 px-4 py-2 text-sm font-semibold text-fuchsia-100 transition hover:border-fuchsia-200/60 hover:bg-fuchsia-300/20">
-        Админ-панель
-      </button>
-    );
-  }
+function getBaseDate() {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
 
-  return (
-    <button className="rounded-xl border border-cyan-300/40 bg-cyan-300/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:border-cyan-200/60 hover:bg-cyan-300/20">
-      Личный кабинет
-    </button>
+function getDateByOffset(offset) {
+  const date = getBaseDate();
+  date.setDate(date.getDate() + offset);
+  return date;
+}
+
+function toDateKey(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function formatTabTitle(date, offset) {
+  if (offset === 0) return "Сегодня";
+  if (offset === 1) return "Завтра";
+
+  const weekday = new Intl.DateTimeFormat("ru-RU", { weekday: "long" }).format(
+    date,
   );
+  return weekday.charAt(0).toUpperCase() + weekday.slice(1);
+}
+
+function formatDateLabel(date) {
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "numeric",
+    month: "long",
+  }).format(date);
+}
+
+function getHour(time) {
+  return Number(time.split(":")[0]);
 }
 
 export default function MainPage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [role, setRole] = useState("guest");
-  const [search, setSearch] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const filteredCinemas = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    if (!query) return cinemas;
+  const [activeSlides, setActiveSlides] = useState({
+    "cinema-1": 0,
+    "cinema-2": 0,
+  });
 
-    return cinemas.filter(
-      (cinema) =>
-        cinema.name.toLowerCase().includes(query) ||
-        cinema.city.toLowerCase().includes(query) ||
-        cinema.address.toLowerCase().includes(query),
+  const dayTabs = useMemo(() => {
+    return Array.from({ length: 4 }, (_, offset) => {
+      const date = getDateByOffset(offset);
+      return {
+        key: toDateKey(date),
+        title: formatTabTitle(date, offset),
+        label: formatDateLabel(date),
+      };
+    });
+  }, []);
+
+  const initialDate = dayTabs[0]?.key ?? toDateKey(getBaseDate());
+
+  const [selectedDate, setSelectedDate] = useState(initialDate);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [priceFilter, setPriceFilter] = useState("all");
+  const [timeFilter, setTimeFilter] = useState("all");
+  const [cinemaFilter, setCinemaFilter] = useState("all");
+
+  const allCinemas = useMemo(() => {
+    const unique = new Set(
+      scheduleMovies.flatMap((movie) =>
+        movie.screenings.map((session) => session.cinema),
+      ),
     );
-  }, [search]);
-  const ITEMS_PER_PAGE = 8;
-  const totalPages = Math.ceil(filteredCinemas.length / ITEMS_PER_PAGE);
-  const safeCurrentPage =
-    totalPages === 0 ? 1 : Math.min(currentPage, totalPages);
+    return Array.from(unique);
+  }, []);
 
-  const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
-  const currentItems = filteredCinemas.slice(
-    startIndex,
-    startIndex + ITEMS_PER_PAGE,
-  );
+  const shiftSlide = (cinemaId, direction, imagesLength) => {
+    setActiveSlides((prev) => {
+      const current = prev[cinemaId] ?? 0;
+      const next = (current + direction + imagesLength) % imagesLength;
+      return { ...prev, [cinemaId]: next };
+    });
+  };
+
+  const filteredSchedule = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
+    return scheduleMovies
+      .map((movie) => {
+        const screenings = movie.screenings.filter((session) => {
+          const sessionDate = toDateKey(getDateByOffset(session.dayOffset));
+          if (sessionDate !== selectedDate) return false;
+
+          if (cinemaFilter !== "all" && session.cinema !== cinemaFilter)
+            return false;
+
+          if (priceFilter === "under600" && session.price >= 600) return false;
+          if (
+            priceFilter === "600to750" &&
+            (session.price < 600 || session.price > 750)
+          )
+            return false;
+          if (priceFilter === "over750" && session.price <= 750) return false;
+
+          const hour = getHour(session.time);
+          if (timeFilter === "morning" && hour >= 12) return false;
+          if (timeFilter === "day" && (hour < 12 || hour >= 18)) return false;
+          if (timeFilter === "evening" && (hour < 18 || hour >= 23))
+            return false;
+          if (timeFilter === "night" && hour < 23) return false;
+
+          return true;
+        });
+
+        return { ...movie, screenings };
+      })
+      .filter((movie) => {
+        if (movie.screenings.length === 0) return false;
+        if (!query) return true;
+
+        const byTitle = movie.title.toLowerCase().includes(query);
+        const byGenre = movie.genre.toLowerCase().includes(query);
+        const byCinema = movie.screenings.some((session) =>
+          session.cinema.toLowerCase().includes(query),
+        );
+
+        return byTitle || byGenre || byCinema;
+      });
+  }, [cinemaFilter, priceFilter, searchQuery, selectedDate, timeFilter]);
+
+  const selectCinemaFilter = (cinemaName) => {
+    setCinemaFilter(cinemaName);
+    const scheduleSection = document.getElementById("schedule-section");
+    if (scheduleSection) {
+      scheduleSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#070911] text-white">
@@ -195,8 +707,8 @@ export default function MainPage() {
       <div className="pointer-events-none absolute -left-20 top-32 h-72 w-72 rounded-full bg-[#5f3bff]/25 blur-3xl animate-pulse-glow" />
       <div className="pointer-events-none absolute right-0 top-14 h-80 w-80 rounded-full bg-[#00b7ff]/20 blur-3xl animate-pulse-glow-delayed" />
 
-      <header className="relative z-30 mx-auto max-w-7xl px-6 pt-6 lg:px-10">
-        <nav className="glass-card flex items-center gap-4 rounded-2xl px-4 py-3 lg:px-5">
+      <header className="fixed inset-x-0 top-0 z-40 bg-[#070911]/80 backdrop-blur-sm">
+        <div className="mx-auto flex w-full items-center justify-between px-2 pt-0.5 sm:px-6 lg:px-10">
           <a href="#" className="flex shrink-0 items-center gap-3">
             <img
               alt="Cinema Booking"
@@ -207,187 +719,286 @@ export default function MainPage() {
               CINEMA BOOKING
             </span>
           </a>
-
-          <label className="relative hidden min-w-0 flex-1 items-center lg:flex">
-            <MagnifyingGlassIcon className="pointer-events-none absolute left-3 size-5 text-white/45" />
-            <input
-              type="text"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Поиск кинотеатра или города"
-              className="w-full rounded-xl border border-white/15 bg-white/[0.04] py-2.5 pl-10 pr-3 text-sm text-white placeholder:text-white/40 outline-none transition focus:border-cyan-300/50 focus:shadow-[0_0_24px_rgba(0,183,255,0.24)]"
-            />
-          </label>
-
-          <div className="hidden items-center gap-3 lg:flex">
-            <select
-              value={role}
-              onChange={(event) => setRole(event.target.value)}
-              className="rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none transition hover:border-white/30 focus:border-cyan-300/50"
-            >
-              {roles.map((item) => (
-                <option
-                  key={item.value}
-                  value={item.value}
-                  className="bg-[#0b1020]"
-                >
-                  {item.label}
-                </option>
-              ))}
-            </select>
-            <AuthAction role={role} />
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(true)}
-            className="ml-auto inline-flex items-center rounded-xl border border-white/15 p-2 text-white/80 lg:hidden"
-          >
-            <span className="sr-only">Open menu</span>
-            <Bars3Icon className="size-6" aria-hidden="true" />
-          </button>
-        </nav>
-
-        <Dialog
-          open={mobileMenuOpen}
-          onClose={setMobileMenuOpen}
-          className="lg:hidden"
-        >
-          <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" />
-          <DialogPanel className="fixed inset-y-0 right-0 z-50 w-full max-w-sm bg-[#090d1a]/95 p-6 ring-1 ring-white/10">
-            <div className="mb-6 flex items-center justify-between">
+          <div className="hidden items-center gap-2 md:flex">
+            {navButtons.map((item) => (
               <button
-                type="button"
-                onClick={() => setMobileMenuOpen(false)}
-                className="rounded-lg border border-white/20 p-2 text-white/70"
+                key={item}
+                className="rounded-lg border border-white/15 bg-white/[0.03] px-3 py-1.5 text-sm font-medium text-white/75 transition hover:border-cyan-300/40 hover:bg-cyan-300/10 hover:text-cyan-100"
               >
-                <XMarkIcon className="size-5" aria-hidden="true" />
+                {item}
               </button>
-            </div>
-
-            <label className="relative block">
-              <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-white/45" />
-              <input
-                type="text"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Поиск кинотеатра"
-                className="w-full rounded-xl border border-white/15 bg-white/[0.04] py-2.5 pl-10 pr-3 text-sm text-white placeholder:text-white/40 outline-none"
-              />
-            </label>
-
-            <div className="mt-4 space-y-4">
-              <div>
-                <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-white/60">
-                  Тестовая роль
-                </label>
-                <select
-                  value={role}
-                  onChange={(event) => setRole(event.target.value)}
-                  className="w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2.5 text-sm text-white outline-none"
-                >
-                  {roles.map((item) => (
-                    <option
-                      key={item.value}
-                      value={item.value}
-                      className="bg-[#0b1020]"
-                    >
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <AuthAction role={role} />
-            </div>
-          </DialogPanel>
-        </Dialog>
+            ))}
+          </div>
+          <button className="btn-glossy rounded-xl px-4 py-2 text-sm font-semibold text-white/90 hover:text-white">
+            Вход / Регистрация
+          </button>
+        </div>
       </header>
 
-      <main className="relative z-20 mx-auto max-w-7xl px-6 pb-36 pt-12 lg:px-10">
-        <div className="animate-slide-up">
-          <h1 className="mt-6 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Список кинотеатров
-          </h1>
-        </div>
+      <main className="relative z-20 mx-auto max-w-7xl px-6 pb-20 pt-28 lg:px-10">
+        <h1 className="mt-6 text-3xl font-semibold tracking-tight sm:text-4xl">
+          Наши кинотеатры
+        </h1>
 
-        <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
-          {currentItems.map((cinema, index) => (
-            <article
-              key={`${cinema.name}-${startIndex + index}`}
-              className="glass-card hover-lift rounded-2xl p-5"
-            >
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold text-white/95">
-                  {cinema.name}
-                </h2>
-                <span className="rounded-lg border border-cyan-300/35 bg-cyan-300/10 px-2 py-1 text-xs font-medium text-cyan-200">
-                  {cinema.city}
-                </span>
-              </div>
-              <div className="flex items-start gap-2 text-sm text-white/65">
-                <MapPinIcon className="mt-0.5 size-4 shrink-0 text-white/50" />
-                <span>{cinema.address}</span>
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-white/80">
-                  Залов:{" "}
-                  <span className="font-semibold text-white">
-                    {cinema.halls}
-                  </span>
+        <section className="mt-8 grid gap-6 lg:grid-cols-2">
+          {cinemaCards.map((cinema) => {
+            const currentSlide = activeSlides[cinema.id] ?? 0;
+
+            return (
+              <article
+                key={cinema.id}
+                className="glass-card overflow-hidden rounded-3xl p-4 sm:p-5"
+              >
+                <div className="grid gap-5 md:grid-cols-[44%_56%] md:items-stretch">
+                  <div className="relative min-h-64 overflow-hidden rounded-2xl border border-white/10">
+                    <img
+                      src={cinema.images[currentSlide]}
+                      alt={`${cinema.name} ${currentSlide + 1}`}
+                      className="h-full w-full object-cover"
+                    />
+
+                    <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/55 to-transparent px-3 pb-3 pt-8">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          shiftSlide(cinema.id, -1, cinema.images.length)
+                        }
+                        className="rounded-lg border border-white/20 bg-black/40 p-1.5 text-white/85 transition hover:border-cyan-300/50 hover:text-cyan-100"
+                        aria-label="Предыдущее фото"
+                      >
+                        <ChevronLeftIcon className="size-4" />
+                      </button>
+
+                      <div className="flex items-center gap-1.5">
+                        {cinema.images.map((_, dotIndex) => (
+                          <span
+                            key={dotIndex}
+                            className={`h-1.5 rounded-full transition-all ${
+                              dotIndex === currentSlide
+                                ? "w-5 bg-cyan-200"
+                                : "w-1.5 bg-white/55"
+                            }`}
+                          />
+                        ))}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          shiftSlide(cinema.id, 1, cinema.images.length)
+                        }
+                        className="rounded-lg border border-white/20 bg-black/40 p-1.5 text-white/85 transition hover:border-cyan-300/50 hover:text-cyan-100"
+                        aria-label="Следующее фото"
+                      >
+                        <ChevronRightIcon className="size-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col justify-between">
+                    <div>
+                      <div className="mb-3 flex flex-wrap items-center gap-2">
+                        <h2 className="text-2xl font-semibold text-white/95">
+                          {cinema.name}
+                        </h2>
+                        <span className="rounded-lg border border-cyan-300/35 bg-cyan-300/10 px-2 py-1 text-xs font-medium text-cyan-200">
+                          {cinema.city}
+                        </span>
+                      </div>
+
+                      <p className="text-sm leading-relaxed text-white/70">
+                        {cinema.description}
+                      </p>
+                    </div>
+
+                    <div className="mt-5 space-y-2 pr-3">
+                      {cinema.advantages.map((item) => (
+                        <div
+                          key={item}
+                          className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white/85"
+                        >
+                          <MapPinIcon className="size-4 shrink-0 text-cyan-200" />
+                          <span>{item}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => selectCinemaFilter(cinema.name)}
+                      className="mt-5 mr-3 inline-flex max-w-full self-start whitespace-normal rounded-xl border border-cyan-300/35 bg-cyan-300/10 px-4 py-2 text-left text-sm font-semibold leading-snug text-cyan-100 transition hover:border-cyan-200/60 hover:bg-cyan-300/20"
+                    >
+                      Добавить в фильтр расписания
+                    </button>
+                  </div>
                 </div>
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-white/80">
-                  Мест:{" "}
-                  <span className="font-semibold text-white">
-                    {cinema.seats}
-                  </span>
-                </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </section>
 
-        {filteredCinemas.length === 0 && (
-          <div className="glass-card mt-8 rounded-2xl p-8 text-center text-white/70">
-            По запросу{" "}
-            <span className="font-semibold text-cyan-200">{search}</span> ничего
-            не найдено.
-          </div>
-        )}
+        <section id="schedule-section" className="mt-14 scroll-mt-28">
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            Расписание сеансов
+          </h2>
 
-        {totalPages > 0 && (
-          <nav
-            aria-label="Pagination"
-            className="pagination-shell fixed bottom-4 left-1/2 z-40 flex w-[calc(100%-1.5rem)] max-w-3xl -translate-x-1/2 items-center justify-between gap-2 rounded-2xl px-3 py-3 sm:gap-3 sm:px-4"
-          >
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={safeCurrentPage === 1}
-              className="pagination-arrow"
-            >
-              Назад
-            </button>
-
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              {[...Array(totalPages)].map((_, i) => (
+          <div className="glass-card mt-6 rounded-3xl p-4 sm:p-5">
+            <div className="flex flex-wrap gap-2">
+              {dayTabs.map((day) => (
                 <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`pagination-page ${safeCurrentPage === i + 1 ? "is-active" : ""}`}
+                  key={day.key}
+                  type="button"
+                  onClick={() => setSelectedDate(day.key)}
+                  className={`rounded-xl border px-4 py-2 text-left transition ${
+                    selectedDate === day.key
+                      ? "border-cyan-300/55 bg-cyan-300/12 text-cyan-100"
+                      : "border-white/12 bg-white/[0.03] text-white/75 hover:border-cyan-300/35"
+                  }`}
                 >
-                  {i + 1}
+                  <div className="text-sm font-semibold">{day.title}</div>
+                  <div className="text-xs opacity-80">{day.label}</div>
                 </button>
               ))}
             </div>
 
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={safeCurrentPage === totalPages}
-              className="pagination-arrow"
-            >
-              Вперед
-            </button>
-          </nav>
-        )}
+            <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+              <label className="relative xl:col-span-2">
+                <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-white/45" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Поиск фильма, жанра или кинотеатра"
+                  className="w-full rounded-xl border border-white/12 bg-white/[0.03] py-2.5 pl-10 pr-3 text-sm text-white placeholder:text-white/40 outline-none transition focus:border-cyan-300/50"
+                />
+              </label>
+
+              <label className="relative">
+                <CalendarDaysIcon className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-white/45" />
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(event) => setSelectedDate(event.target.value)}
+                  className="w-full rounded-xl border border-white/12 bg-white/[0.03] py-2.5 pl-10 pr-3 text-sm text-white outline-none transition focus:border-cyan-300/50"
+                />
+              </label>
+
+              <select
+                value={priceFilter}
+                onChange={(event) => setPriceFilter(event.target.value)}
+                className="rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2.5 text-sm text-white outline-none transition focus:border-cyan-300/50"
+              >
+                <option value="all" className="bg-[#0b1020]">
+                  Цена: любая
+                </option>
+                <option value="under600" className="bg-[#0b1020]">
+                  До 600 ₽
+                </option>
+                <option value="600to750" className="bg-[#0b1020]">
+                  600–750 ₽
+                </option>
+                <option value="over750" className="bg-[#0b1020]">
+                  Свыше 750 ₽
+                </option>
+              </select>
+
+              <select
+                value={timeFilter}
+                onChange={(event) => setTimeFilter(event.target.value)}
+                className="rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2.5 text-sm text-white outline-none transition focus:border-cyan-300/50"
+              >
+                <option value="all" className="bg-[#0b1020]">
+                  Время: любое
+                </option>
+                <option value="morning" className="bg-[#0b1020]">
+                  Утро (до 12:00)
+                </option>
+                <option value="day" className="bg-[#0b1020]">
+                  День (12:00–18:00)
+                </option>
+                <option value="evening" className="bg-[#0b1020]">
+                  Вечер (18:00–23:00)
+                </option>
+                <option value="night" className="bg-[#0b1020]">
+                  Ночь (после 23:00)
+                </option>
+              </select>
+
+              <select
+                value={cinemaFilter}
+                onChange={(event) => setCinemaFilter(event.target.value)}
+                className="rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2.5 text-sm text-white outline-none transition focus:border-cyan-300/50"
+              >
+                <option value="all" className="bg-[#0b1020]">
+                  Кинотеатр: все
+                </option>
+                {allCinemas.map((cinemaName) => (
+                  <option
+                    key={cinemaName}
+                    value={cinemaName}
+                    className="bg-[#0b1020]"
+                  >
+                    {cinemaName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-6 space-y-4">
+            {filteredSchedule.map((movie) => (
+              <article
+                key={movie.id}
+                className="glass-card rounded-3xl p-4 sm:p-5"
+              >
+                <div className="grid gap-4 md:grid-cols-[180px_1fr]">
+                  <img
+                    src={movie.poster}
+                    alt={movie.title}
+                    className="h-56 w-full rounded-2xl object-cover"
+                  />
+
+                  <div>
+                    <h3 className="text-2xl font-semibold text-yellow-300">
+                      {movie.title}
+                    </h3>
+                    <p className="mt-1 text-sm text-white/75">
+                      {movie.rating} · {movie.genre} · {movie.duration}
+                    </p>
+
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                      {movie.screenings.map((session, index) => (
+                        <div
+                          key={`${movie.id}-${session.time}-${index}`}
+                          className="rounded-xl border border-white/12 bg-white/[0.03] px-3 py-3"
+                        >
+                          <div className="text-xs text-white/60">
+                            {session.format} · {session.hall}
+                          </div>
+                          <div className="text-xs text-cyan-200">
+                            {session.cinema}
+                          </div>
+                          <div className="mt-1 text-3xl font-semibold text-yellow-300">
+                            {session.time}
+                          </div>
+                          <div className="text-base font-medium text-white">
+                            {session.price} ₽
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </article>
+            ))}
+
+            {filteredSchedule.length === 0 && (
+              <div className="glass-card rounded-2xl p-8 text-center text-white/70">
+                По выбранным фильтрам сеансов не найдено.
+              </div>
+            )}
+          </div>
+        </section>
       </main>
     </div>
   );
