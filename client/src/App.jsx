@@ -1,11 +1,24 @@
 import "./index.css";
 import MainPage from "./pages/MainPage";
+import { Navigate, Route, Routes } from "react-router-dom";
+import AuthPage from "./pages/AuthPage";
+import PlaceholderPage from "./pages/PlaceholderPage";
+import UserPage from "./pages/UserPage";
 
 function App() {
   return (
-    <div className="App">
-      <MainPage />
-    </div>
+    <Routes>
+      <Route path="/" element={<MainPage />} />
+      <Route path="/auth" element={<AuthPage />} />
+      <Route
+        path="/schedule"
+        element={<PlaceholderPage title="Расписание" />}
+      />
+      <Route path="/cinemas" element={<PlaceholderPage title="Кинотеатры" />} />
+      <Route path="/offers" element={<PlaceholderPage title="Акции" />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="/user" element={<UserPage />} />
+    </Routes>
   );
 }
 

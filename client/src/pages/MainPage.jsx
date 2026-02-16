@@ -6,7 +6,6 @@ import {
   MagnifyingGlassIcon,
   MapPinIcon,
 } from "@heroicons/react/24/outline";
-import logo from "../assets/logo.png";
 import cinema1Main from "../assets/cinema1.jpg";
 import cinema1Alt1 from "../assets/cinema1-1.jpg";
 import cinema1Alt2 from "../assets/cinema1-2.jpg";
@@ -25,8 +24,7 @@ import movie9child from "../assets/movie9child.webp";
 import movie10child from "../assets/movie10child.webp";
 import movie11child from "../assets/movie11child.png";
 import movie12 from "../assets/movie12.webp";
-
-const navButtons = ["Афиша", "Расписание", "Кинотеатры", "Акции"];
+import Header from "../components/Header";
 
 const cinemaCards = [
   {
@@ -707,33 +705,7 @@ export default function MainPage() {
       <div className="pointer-events-none absolute -left-20 top-32 h-72 w-72 rounded-full bg-[#5f3bff]/25 blur-3xl animate-pulse-glow" />
       <div className="pointer-events-none absolute right-0 top-14 h-80 w-80 rounded-full bg-[#00b7ff]/20 blur-3xl animate-pulse-glow-delayed" />
 
-      <header className="fixed inset-x-0 top-0 z-40 bg-[#070911]/80 backdrop-blur-sm">
-        <div className="mx-auto flex w-full items-center justify-between px-2 pt-0.5 sm:px-6 lg:px-10">
-          <a href="#" className="flex shrink-0 items-center gap-3">
-            <img
-              alt="Cinema Booking"
-              src={logo}
-              className="h-20 w-9 rounded-lg object-cover pt-2"
-            />
-            <span className="hidden text-sm font-semibold tracking-wide text-white/90 sm:block">
-              CINEMA BOOKING
-            </span>
-          </a>
-          <div className="hidden items-center gap-2 md:flex">
-            {navButtons.map((item) => (
-              <button
-                key={item}
-                className="rounded-lg border border-white/15 bg-white/[0.03] px-3 py-1.5 text-sm font-medium text-white/75 transition hover:border-cyan-300/40 hover:bg-cyan-300/10 hover:text-cyan-100"
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-          <button className="btn-glossy rounded-xl px-4 py-2 text-sm font-semibold text-white/90 hover:text-white">
-            Вход / Регистрация
-          </button>
-        </div>
-      </header>
+      <Header />
 
       <main className="relative z-20 mx-auto max-w-7xl px-6 pb-20 pt-28 lg:px-10">
         <h1 className="mt-6 text-3xl font-semibold tracking-tight sm:text-4xl">
