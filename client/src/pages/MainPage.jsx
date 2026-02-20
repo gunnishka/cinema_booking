@@ -26,7 +26,7 @@ import movie10child from "../assets/movie10child.webp";
 import movie11child from "../assets/movie11child.png";
 import movie12 from "../assets/movie12.webp";
 import Header from "../components/Header";
-import { CinemaSeatIcon, CinemaScreenIcon } from "../assets/Icons";
+/*import { CinemaSeatIcon, CinemaScreenIcon } from "../assets/Icons";*/
 
 const cinemaCards = [
   {
@@ -641,6 +641,21 @@ export default function MainPage() {
   const [timeFilter, setTimeFilter] = useState("all");
   const [cinemaFilter, setCinemaFilter] = useState("all");
   const [selectedSession, setSelectedSession] = useState(null);
+  const [chosenSeats, setChosenSeats] = useState([]);
+
+  const plusChosenSeat = (row, seat) => {
+    setChosenSeats((prev) => {
+      const exists = prev.some(([r, s]) => r === row && s === seat);
+      if (exists) return prev;
+      return [...prev, [row, seat]];
+    });
+  };
+
+  const removeChosenSeat = (row, seat) => {
+    setChosenSeats((prev) =>
+      prev.filter(([r, s]) => !(r === row && s === seat)),
+    );
+  };
 
   const allCinemas = useMemo(() => {
     const unique = new Set(
@@ -962,6 +977,7 @@ export default function MainPage() {
                               movieTitle: movie.title,
                               moviePoster: movie.poster,
                               movieRating: movie.rating,
+                              movieGenre: movie.genre,
                               movieDuration: movie.duration,
                               session,
                             })
@@ -1007,26 +1023,93 @@ export default function MainPage() {
           aria-hidden="true"
         />
         <div className="fixed inset-0 flex items-center justify-center p-4">
-          <DialogPanel className="glass-card w-full max-w-xl rounded-3xl p-5 sm:p-6">
+          <DialogPanel className="glass-card w-full max-w-xl rounded-3xl p-5 sm:p-6 dialog-panel">
+            <div className="items-center gap-4 rounded-xl border border-white/10 bg-slate-900 p-3 flex mb-5">
+              <h3 className="text-2xl font-semibold text-yellow-300">
+                {selectedSession?.movieTitle}
+              </h3>
+              <p className="mt-1 text-sm text-white/75">
+                {selectedSession?.movieRating} · {selectedSession?.movieGenre} ·{" "}
+                {selectedSession?.movieDuration}
+              </p>
+            </div>
             <div className="flex flex-col items-center gap-8 p-10 bg-slate-900 rounded-xl">
-              <div className="w-full h-2 bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.6)] rounded-full mb-10"></div>
-              <div className="grid grid-cols-10 gap-3">
-                {seatsData.flat().map((seat) => (
-                  <button
-                    key={seat.id}
-                    className="w-8 h-8 md:w-10 md:h-10 bg-slate-700 hover:bg-blue-500 rounded-t-lg transition-colors flex items-center justify-center text-[10px] text-slate-400 hover:text-white"
-                    onClick={() =>
-                      console.log(
-                        `Выбрано место: ряд ${seat.row}, место ${seat.seat}`,
-                      )
-                    }
+              <div className="flex flex-col items-center gap-4  ">
+                <div className="h-2 w-90 rounded-full bg-cyan-300/70 shadow-[0_0_24px_rgba(56,189,248,0.6)]" />
+                <span className="text-sm text-slate-400">Экран</span>
+              </div>
+
+              <div className="flex flex-col gap-5 pr-10">
+                {seatsData.map((rowSeats, rowIndex) => (
+                  <div
+                    key={rowIndex}
+                    className="grid grid-cols-[40px_1fr] items-center gap-3"
                   >
-                    {seat.seat}
-                  </button>
+                    <span className="text-sm text-slate-400">
+                      Ряд {rowIndex + 1}
+                    </span>
+
+                    <div className="grid grid-cols-10 gap-11">
+                      {rowSeats.map((seat) => {
+                        const isSelected = chosenSeats.some(
+                          ([r, s]) => r === seat.row && s === seat.seat,
+                        );
+
+                        return (
+                          <button
+                            key={seat.id}
+                            type="button"
+                            onClick={() =>
+                              isSelected
+                                ? removeChosenSeat(seat.row, seat.seat)
+                                : plusChosenSeat(seat.row, seat.seat)
+                            }
+                            className={`w-8 h-8 md:w-10 md:h-10 rounded-t-lg transition-colors flex items-center justify-center text-[10px] ${
+                              isSelected
+                                ? "bg-blue-500 text-white"
+                                : "bg-slate-700 text-slate-400 hover:bg-blue-500 hover:text-white"
+                            }`}
+                          >
+                            {seat.seat}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 ))}
               </div>
 
-              <p className="text-slate-400 text-sm">Выберите место в зале</p>
+              {chosenSeats.length > 0 ? (
+                <div className="mt-3">
+                  <p className="mb-2 text-center text-sm font-semibold text-white/85">
+                    Выбранные места
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {chosenSeats.map(([row, seat], index) => (
+                      <div
+                        key={`${row}-${seat}-${index}`}
+                        className="inline-flex items-center gap-2 rounded-lg border border-cyan-300/30 bg-cyan-300/10 px-3 py-1.5 text-sm text-white"
+                      >
+                        <span>
+                          Ряд {row}, место {seat}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeChosenSeat(row, seat)}
+                          className="rounded-md border border-cyan-200/35 bg-cyan-200/10 px-1.5 py-0.5 text-xs leading-none text-cyan-100 transition hover:bg-cyan-200/20"
+                          aria-label={`Удалить место ${seat} в ряду ${row}`}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-center text-sm text-slate-400">
+                  Выберите места для бронирования
+                </p>
+              )}
             </div>
           </DialogPanel>
         </div>
