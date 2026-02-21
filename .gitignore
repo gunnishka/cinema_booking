@@ -31,3 +31,11 @@ Thumbs.db
 # misc
 coverage/
 .cache/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+certs/

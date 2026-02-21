@@ -26,8 +26,12 @@ import movie10child from "../assets/movie10child.webp";
 import movie11child from "../assets/movie11child.png";
 import movie12 from "../assets/movie12.webp";
 import Header from "../components/Header";
+<<<<<<< HEAD
 import { useAuth } from "../components/useAuth";
 /*import { CinemaSeatIcon, CinemaScreenIcon } from "../assets/Icons";*/
+=======
+// import { CinemaSeatIcon, CinemaScreenIcon } from "../assets/Icons";
+>>>>>>> 9bcbdc2 (wip: промежуточные изменения)
 
 const cinemaCards = [
   {
@@ -1098,6 +1102,7 @@ export default function MainPage() {
               </p>
             </div>
             <div className="flex flex-col items-center gap-8 p-10 bg-slate-900 rounded-xl">
+<<<<<<< HEAD
               <div className="flex flex-col items-center gap-4  ">
                 <div className="h-2 w-90 rounded-full bg-cyan-300/70 shadow-[0_0_24px_rgba(56,189,248,0.6)]" />
                 <span className="text-sm text-slate-400">Экран</span>
@@ -1108,6 +1113,19 @@ export default function MainPage() {
                   <div
                     key={rowIndex}
                     className="grid grid-cols-[40px_1fr] items-center gap-3"
+=======
+              <div className="w-full h-2 bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.6)] rounded-full mb-10"></div>
+              <div className="grid grid-cols-10 gap-7">
+                {seatsData.flat().map((seat) => (
+                  <button
+                    key={seat.id}
+                    className="w-8 h-8 md:w-10 md:h-10 bg-slate-700 hover:bg-blue-500 rounded-t-lg transition-colors flex items-center justify-center text-[10px] text-slate-400 hover:text-white"
+                    onClick={() =>
+                      console.log(
+                        `Выбрано место: ряд ${seat.row}, место ${seat.seat}`,
+                      )
+                    }
+>>>>>>> 9bcbdc2 (wip: промежуточные изменения)
                   >
                     <span className="text-sm text-slate-400">
                       Ряд {rowIndex + 1}
