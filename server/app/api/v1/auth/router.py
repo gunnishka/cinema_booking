@@ -82,9 +82,6 @@ async def get_me(
 ) -> User:
     return current_user
 
-
-# ---------- Примеры использования ролевой защиты ----------
-
 @router.get(
     "/admin-only",
     summary="Тестовый эндпоинт только для администраторов",

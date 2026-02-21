@@ -39,7 +39,7 @@ async def get_current_user(
 
 
 def require_role(*roles: str) -> Callable:
-    """Фабрика зависимостей: пропускает запрос только если роль пользователя входит в список."""
+    """Пропускает запрос только если роль пользователя входит в список."""
 
     async def role_checker(
         current_user: User = Depends(get_current_user),
