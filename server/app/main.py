@@ -1,13 +1,8 @@
-from fastapi import FastAPI
-
-from app.db import Base, engine
-from app import models  
+from fastapi import FastAPI 
+from .api.v1 import router as auth_router
 
 app = FastAPI(title="Cinema Booking API")
-
-# Создаём таблицы при старте 
-Base.metadata.create_all(bind=engine)
-
+app.include_router(auth_router)  
 
 @app.get("/")
 def root():
