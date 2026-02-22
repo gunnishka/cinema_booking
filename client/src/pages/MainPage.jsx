@@ -70,7 +70,7 @@ const scheduleMovies = [
         format: "2D",
         hall: "Зал 4",
         cinema: "Cinema Star",
-        purchasedSeats: [],
+        purchasedSeats: [[1, 3], [2, 7], [3, 5]],
       },
       {
         dayOffset: 0,
@@ -1260,10 +1260,16 @@ export default function MainPage() {
 
                     <div className="grid grid-cols-10 gap-11">
                       {rowSeats.map((seat) => {
-                        const isPurchased =
-                          selectedSession?.session?.purchasedSeats?.some(
-                            ([r, s]) => r === seat.row && s === seat.seat,
-                          ) ?? false;
+
+                        // Получаем список занятых мест для текущего сеанса
+                        const purchasedSeats = selectedSession?.session?.purchasedSeats ?? [];
+                        
+                        // Проверяем, является ли место занятым
+                        const isPurchased = purchasedSeats.some(
+                          (entry) => entry[0] === seat.row && entry[1] === seat.seat,
+                        );
+
+                        // Проверяем, является ли место выбранным
                         const isSelected = chosenSeats.some(
                           ([r, s]) => r === seat.row && s === seat.seat,
                         );
@@ -1282,19 +1288,38 @@ export default function MainPage() {
                             }
                             className={`w-8 h-8 md:w-10 md:h-10 rounded-t-lg transition-colors flex items-center justify-center text-[10px] ${
                               isPurchased
-                                ? "cursor-not-allowed bg-slate-500 text-slate-200"
+                                ? "cursor-not-allowed bg-red-900/60 text-red-400"
                                 : isSelected
                                   ? "bg-blue-500 text-white"
                                   : "bg-slate-700 text-slate-400 hover:bg-blue-500 hover:text-white"
                             }`}
                           >
-                            {seat.seat}
+                            {isPurchased ? (
+                              <span className="text-red-400 text-xs font-bold leading-none select-none">{seat.seat}</span>
+                            ) : (
+                              seat.seat
+                            )}
                           </button>
                         );
                       })}
                     </div>
                   </div>
                 ))}
+              </div>
+              {/* Легенда в модальном окне (выбрано, свободно, занято) */}
+              <div className="flex items-center justify-center gap-5 text-xs text-slate-400">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-4 h-4 rounded-sm bg-slate-700 inline-block" />
+                  Свободно
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-4 h-4 rounded-sm bg-blue-500 inline-block" />
+                  Выбрано
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-4 h-4 rounded-sm bg-red-900/60 inline-block" />
+                  Занято
+                </div>
               </div>
 
               {chosenSeats.length > 0 ? (

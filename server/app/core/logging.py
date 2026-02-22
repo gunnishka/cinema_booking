@@ -1,11 +1,10 @@
-"""Настройка логирования для всего приложения."""
 import logging
 import logging.config
 from pathlib import Path
 
 
 def setup_logging(log_level: str = "INFO", log_file: str | None = None) -> None:
-    """Инициализировать логирование. Вызывается один раз при старте приложения."""
+    """Инициализировать логирование."""
     handlers: dict = {
         "console": {
             "class": "logging.StreamHandler",
