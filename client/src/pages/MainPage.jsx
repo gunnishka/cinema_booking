@@ -26,12 +26,8 @@ import movie10child from "../assets/movie10child.webp";
 import movie11child from "../assets/movie11child.png";
 import movie12 from "../assets/movie12.webp";
 import Header from "../components/Header";
-<<<<<<< HEAD
 import { useAuth } from "../components/useAuth";
-/*import { CinemaSeatIcon, CinemaScreenIcon } from "../assets/Icons";*/
-=======
 // import { CinemaSeatIcon, CinemaScreenIcon } from "../assets/Icons";
->>>>>>> 9bcbdc2 (wip: промежуточные изменения)
 
 const cinemaCards = [
   {
@@ -713,6 +709,28 @@ export default function MainPage() {
       }),
     );
 
+    setSelectedSession((prev) => {
+      if (!prev) return prev;
+      const existingSeats = prev.session.purchasedSeats ?? [];
+      const mergedSeats = [...existingSeats];
+
+      seats.forEach(([row, seat]) => {
+        const alreadyExists = mergedSeats.some(
+          ([r, s]) => r === row && s === seat,
+        );
+        if (!alreadyExists) {
+          mergedSeats.push([row, seat]);
+        }
+      });
+
+      return {
+        ...prev,
+        session: {
+          ...prev.session,
+          purchasedSeats: mergedSeats,
+        },
+      };
+    });
     setChosenSeats([]);
   };
 
@@ -1225,7 +1243,6 @@ export default function MainPage() {
               </p>
             </div>
             <div className="flex flex-col items-center gap-8 p-10 bg-slate-900 rounded-xl">
-<<<<<<< HEAD
               <div className="flex flex-col items-center gap-4  ">
                 <div className="h-2 w-90 rounded-full bg-cyan-300/70 shadow-[0_0_24px_rgba(56,189,248,0.6)]" />
                 <span className="text-sm text-slate-400">Экран</span>
@@ -1236,19 +1253,6 @@ export default function MainPage() {
                   <div
                     key={rowIndex}
                     className="grid grid-cols-[40px_1fr] items-center gap-3"
-=======
-              <div className="w-full h-2 bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.6)] rounded-full mb-10"></div>
-              <div className="grid grid-cols-10 gap-7">
-                {seatsData.flat().map((seat) => (
-                  <button
-                    key={seat.id}
-                    className="w-8 h-8 md:w-10 md:h-10 bg-slate-700 hover:bg-blue-500 rounded-t-lg transition-colors flex items-center justify-center text-[10px] text-slate-400 hover:text-white"
-                    onClick={() =>
-                      console.log(
-                        `Выбрано место: ряд ${seat.row}, место ${seat.seat}`,
-                      )
-                    }
->>>>>>> 9bcbdc2 (wip: промежуточные изменения)
                   >
                     <span className="text-sm text-slate-400">
                       Ряд {rowIndex + 1}
@@ -1256,6 +1260,10 @@ export default function MainPage() {
 
                     <div className="grid grid-cols-10 gap-11">
                       {rowSeats.map((seat) => {
+                        const isPurchased =
+                          selectedSession?.session?.purchasedSeats?.some(
+                            ([r, s]) => r === seat.row && s === seat.seat,
+                          ) ?? false;
                         const isSelected = chosenSeats.some(
                           ([r, s]) => r === seat.row && s === seat.seat,
                         );
@@ -1264,15 +1272,20 @@ export default function MainPage() {
                           <button
                             key={seat.id}
                             type="button"
+                            disabled={isPurchased}
                             onClick={() =>
-                              isSelected
-                                ? removeChosenSeat(seat.row, seat.seat)
-                                : plusChosenSeat(seat.row, seat.seat)
+                              isPurchased
+                                ? null
+                                : isSelected
+                                  ? removeChosenSeat(seat.row, seat.seat)
+                                  : plusChosenSeat(seat.row, seat.seat)
                             }
                             className={`w-8 h-8 md:w-10 md:h-10 rounded-t-lg transition-colors flex items-center justify-center text-[10px] ${
-                              isSelected
-                                ? "bg-blue-500 text-white"
-                                : "bg-slate-700 text-slate-400 hover:bg-blue-500 hover:text-white"
+                              isPurchased
+                                ? "cursor-not-allowed bg-slate-500 text-slate-200"
+                                : isSelected
+                                  ? "bg-blue-500 text-white"
+                                  : "bg-slate-700 text-slate-400 hover:bg-blue-500 hover:text-white"
                             }`}
                           >
                             {seat.seat}
@@ -1459,21 +1472,16 @@ export default function MainPage() {
               </div>
             )}
             <div className="mt-4 mb-4 space-y-3">
-              {adminSession?.purchasedSeats?.map(
-                (seat, index) => (
-                  console.log(adminSession.purchasedSeats),
-                  (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between rounded-xl bg-white/[0.03] px-3 py-2"
-                    >
-                      <span className="rounded-2xl p-4">
-                        Ряд {seat[0]}, место {seat[1]}
-                      </span>
-                    </div>
-                  )
-                ),
-              )}
+              {adminSession?.purchasedSeats?.map((seat, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between rounded-xl bg-white/[0.03] px-3 py-2"
+                >
+                  <span className="rounded-2xl p-4">
+                    Ряд {seat[0]}, место {seat[1]}
+                  </span>
+                </div>
+              ))}
             </div>
             <div className="flex gap-3">
               {adminSession && (
