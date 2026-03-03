@@ -1,9 +1,60 @@
-import { ChevronLeftIcon, ChevronRightIcon, MapPinIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  MapPinIcon,
+} from "@heroicons/react/24/outline";
 
-export default function CinemaCardsSection({ cinemas, activeSlides, shiftSlide, selectCinemaFilter }) {
+function CinemaCardSkeleton() {
+  return (
+    <article className="glass-card overflow-hidden rounded-3xl p-4 sm:p-5 animate-pulse">
+      <div className="grid gap-5 md:grid-cols-[44%_56%] md:items-stretch">
+        <div className="min-h-64 rounded-2xl bg-white/[0.07]" />
+        <div className="flex flex-col justify-between">
+          <div>
+            <div className="mb-3 flex items-center gap-2">
+              <div className="h-7 w-40 rounded-lg bg-white/[0.07]" />
+              <div className="h-5 w-16 rounded-lg bg-white/[0.07]" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-4 w-full rounded bg-white/[0.07]" />
+              <div className="h-4 w-4/5 rounded bg-white/[0.07]" />
+              <div className="h-4 w-3/5 rounded bg-white/[0.07]" />
+            </div>
+          </div>
+          <div className="mt-5 space-y-2 pr-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-9 rounded-xl bg-white/[0.07]" />
+            ))}
+          </div>
+          <div className="mt-5">
+            <div className="h-9 w-48 rounded-xl bg-white/[0.07]" />
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+export default function CinemaCardsSection({
+  cinemas,
+  loading,
+  activeSlides,
+  shiftSlide,
+  selectCinemaFilter,
+}) {
+  const cinemasList = Array.isArray(cinemas) ? cinemas : [];
+  if (loading) {
+    return (
+      <section className="mt-8 grid gap-6 lg:grid-cols-2">
+        <CinemaCardSkeleton />
+        <CinemaCardSkeleton />
+      </section>
+    );
+  }
+
   return (
     <section className="mt-8 grid gap-6 lg:grid-cols-2">
-      {cinemas.map((cinema) => {
+      {cinemasList.map((cinema) => {
         const images = cinema.image_urls ?? [];
         const currentSlide = activeSlides[cinema.id] ?? 0;
         const currentImage = images[currentSlide];
@@ -20,6 +71,8 @@ export default function CinemaCardsSection({ cinemas, activeSlides, shiftSlide, 
                     src={currentImage}
                     alt={`${cinema.name} ${currentSlide + 1}`}
                     className="h-full w-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-white/[0.03] text-sm text-white/50">
@@ -43,7 +96,9 @@ export default function CinemaCardsSection({ cinemas, activeSlides, shiftSlide, 
                       <span
                         key={dotIndex}
                         className={`h-1.5 rounded-full transition-all ${
-                          dotIndex === currentSlide ? "w-5 bg-cyan-200" : "w-1.5 bg-white/55"
+                          dotIndex === currentSlide
+                            ? "w-5 bg-cyan-200"
+                            : "w-1.5 bg-white/55"
                         }`}
                       />
                     ))}
@@ -64,13 +119,17 @@ export default function CinemaCardsSection({ cinemas, activeSlides, shiftSlide, 
               <div className="flex flex-col justify-between">
                 <div>
                   <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <h2 className="text-2xl font-semibold text-white/95">{cinema.name}</h2>
+                    <h2 className="text-2xl font-semibold text-white/95">
+                      {cinema.name}
+                    </h2>
                     <span className="rounded-lg border border-cyan-300/35 bg-cyan-300/10 px-2 py-1 text-xs font-medium text-cyan-200">
                       {cinema.city}
                     </span>
                   </div>
 
-                  <p className="text-sm leading-relaxed text-white/70">{cinema.description}</p>
+                  <p className="text-sm leading-relaxed text-white/70">
+                    {cinema.description}
+                  </p>
                 </div>
 
                 <div className="mt-5 space-y-2 pr-3">

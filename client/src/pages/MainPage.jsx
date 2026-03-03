@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useAuth } from "../components/useAuth";
-import { getCinemas } from "../api/cinemas";
+import { getCinemas, getCinemaHalls } from "../api/cinemas";
+import { getMovies, addMovie } from "../api/movies";
 import SeatPickerModal from "../features/main/components/SeatPickerModal";
 import AdminSessionModal from "../features/main/components/AdminSessionModal";
 import DeleteMovieDialog from "../features/main/components/DeleteMovieDialog";
@@ -11,7 +13,6 @@ import DataFilters from "../features/main/components/DataFilters";
 import MovieScheduleSection from "../features/main/components/MovieScheduleSection";
 import {
   emptyAdminForm,
-  scheduleMovies,
   seatsData,
 } from "../features/main/data/scheduleMovies";
 import {
@@ -22,9 +23,59 @@ import {
   getHour,
   toDateKey,
 } from "../features/main/utils/date";
+import { addScreening } from "../api/sсreenings";
+
+function mergePurchasedSeatsIntoMovies(movies, payload) {
+  if (
+    !payload?.movieId ||
+    !payload?.session ||
+    !Array.isArray(payload?.seats)
+  ) {
+    return movies;
+  }
+
+  const { movieId, session, seats } = payload;
+  if (seats.length === 0) return movies;
+
+  return movies.map((movie) => {
+    if (movie.id !== movieId) return movie;
+
+    return {
+      ...movie,
+      screenings: movie.screenings.map((currentSession) => {
+        const isTargetSession =
+          currentSession.dayOffset === session.dayOffset &&
+          currentSession.time === session.time &&
+          currentSession.hall === session.hall &&
+          currentSession.cinema === session.cinema;
+
+        if (!isTargetSession) return currentSession;
+
+        const existingSeats = currentSession.purchasedSeats ?? [];
+        const mergedSeats = [...existingSeats];
+
+        seats.forEach(([row, seat]) => {
+          const alreadyExists = mergedSeats.some(
+            ([r, s]) => r === row && s === seat,
+          );
+          if (!alreadyExists) {
+            mergedSeats.push([row, seat]);
+          }
+        });
+
+        return {
+          ...currentSession,
+          purchasedSeats: mergedSeats,
+        };
+      }),
+    };
+  });
+}
 
 export default function MainPage() {
   const [activeSlides, setActiveSlides] = useState({});
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const dayTabs = useMemo(() => {
     return Array.from({ length: 4 }, (_, offset) => {
@@ -45,16 +96,127 @@ export default function MainPage() {
   const [cinemaFilter, setCinemaFilter] = useState("all");
   const [selectedSession, setSelectedSession] = useState(null);
   const [chosenSeats, setChosenSeats] = useState([]);
-  const [moviesData, setMoviesData] = useState(scheduleMovies);
+  const [isCheckoutPending, setIsCheckoutPending] = useState(false);
+  const [moviesData, setMoviesData] = useState([]);
   const [adminSession, setAdminSession] = useState(null);
   const [adminForm, setAdminForm] = useState(emptyAdminForm);
+  const [adminFormError, setAdminFormError] = useState("");
+  const [adminCreateMode, setAdminCreateMode] = useState("movie");
   const [cinemas, setCinemas] = useState([]);
+  const [cinemasLoading, setCinemasLoading] = useState(true);
 
   useEffect(() => {
-    getCinemas()
-      .then((res) => setCinemas(res.data))
-      .catch(() => {});
-  }, []);
+    let isCancelled = false;
+
+    const loadData = async () => {
+      try {
+        const [cinemasRes, moviesRes] = await Promise.all([
+          getCinemas(),
+          getMovies(),
+        ]);
+
+        if (isCancelled) return;
+
+        const cinemasData = cinemasRes.data ?? [];
+        setCinemas(cinemasData);
+
+        // Загрузка залов для каждого кинотеатра, чтобы построить карту hall_id → {hallName, cinemaName}
+        const hallsResponses = await Promise.all(
+          cinemasData.map((cinema) =>
+            getCinemaHalls(cinema.id).then((res) => ({
+              cinema,
+              halls: res.data ?? [],
+            })),
+          ),
+        );
+
+        if (isCancelled) return;
+
+        const hallInfoById = {};
+        hallsResponses.forEach(({ cinema, halls }) => {
+          halls.forEach((hall) => {
+            hallInfoById[hall.id] = {
+              hallName: hall.name,
+              cinemaName: cinema.name,
+            };
+          });
+        });
+
+        const allHallInfos = Object.values(hallInfoById);
+        const fallbackHallInfos =
+          allHallInfos.length > 0
+            ? allHallInfos
+            : [{ hallName: "Зал 1", cinemaName: "Cinema Star" }];
+
+        const apiMovies = moviesRes.data ?? [];
+        const timeSlots = [
+          "10:20",
+          "12:40",
+          "15:10",
+          "17:40",
+          "20:15",
+          "22:30",
+        ];
+
+        const moviesFromApi = apiMovies.map((movie, movieIndex) => {
+          const totalMinutes = movie.duration_min ?? 0;
+          const hours = Math.floor(totalMinutes / 60);
+          const minutes = totalMinutes % 60;
+          const durationLabel =
+            hours > 0 ? `${hours}ч ${minutes}м` : `${minutes}м`;
+
+          const sessionsPerMovie = 3 + (movieIndex % 4); // 3–6 сеансов
+          const screenings = [];
+
+          for (let i = 0; i < sessionsPerMovie; i += 1) {
+            const time = timeSlots[(movieIndex + i) % timeSlots.length];
+            const basePrice = 450 + (movieIndex % 4) * 50;
+            const price = basePrice + i * 30;
+            const hallInfo =
+              fallbackHallInfos[(movieIndex + i) % fallbackHallInfos.length];
+
+            dayTabs.forEach((_, dayOffset) => {
+              screenings.push({
+                dayOffset,
+                time,
+                price,
+                format: "2D",
+                hall: hallInfo.hallName,
+                cinema: hallInfo.cinemaName,
+              });
+            });
+          }
+
+          return {
+            id: String(movie.id),
+            title: movie.name,
+            genre: movie.description || "",
+            duration: durationLabel,
+            poster: movie.poster_url || "",
+            screenings,
+          };
+        });
+
+        const mergedMovies = mergePurchasedSeatsIntoMovies(
+          moviesFromApi,
+          location.state?.paidSession,
+        );
+        setMoviesData(mergedMovies);
+      } catch {
+        // В случае ошибки просто оставляем данные пустыми,
+      } finally {
+        if (!isCancelled) {
+          setCinemasLoading(false);
+        }
+      }
+    };
+
+    loadData();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [dayTabs, location.state?.paidSession]);
 
   const plusChosenSeat = (row, seat) => {
     setChosenSeats((prev) => {
@@ -70,68 +232,27 @@ export default function MainPage() {
     );
   };
 
-  const plusPurchasedSeats = (seats) => {
-    if (!selectedSession || seats.length === 0) return;
+  const handleCheckout = (seats) => {
+    if (!selectedSession || seats.length === 0 || isCheckoutPending) return;
+    setIsCheckoutPending(true);
 
-    setMoviesData((prev) =>
-      prev.map((movie) => {
-        if (movie.id !== selectedSession.movieId) return movie;
+    const seatsForPayment = seats.map(([row, seat]) => [row, seat]);
+    const sessionPrice = Number(selectedSession.session?.price) || 0;
 
-        return {
-          ...movie,
-          screenings: movie.screenings.map((session) => {
-            const isTargetSession =
-              session.dayOffset === selectedSession.session.dayOffset &&
-              session.time === selectedSession.session.time &&
-              session.hall === selectedSession.session.hall &&
-              session.cinema === selectedSession.session.cinema;
+    setSelectedSession(null);
 
-            if (!isTargetSession) return session;
-
-            const existingSeats = session.purchasedSeats ?? [];
-            const mergedSeats = [...existingSeats];
-
-            seats.forEach(([row, seat]) => {
-              const alreadyExists = mergedSeats.some(
-                ([r, s]) => r === row && s === seat,
-              );
-              if (!alreadyExists) {
-                mergedSeats.push([row, seat]);
-              }
-            });
-
-            return {
-              ...session,
-              purchasedSeats: mergedSeats,
-            };
-          }),
-        };
-      }),
-    );
-
-    setSelectedSession((prev) => {
-      if (!prev) return prev;
-      const existingSeats = prev.session.purchasedSeats ?? [];
-      const mergedSeats = [...existingSeats];
-
-      seats.forEach(([row, seat]) => {
-        const alreadyExists = mergedSeats.some(
-          ([r, s]) => r === row && s === seat,
-        );
-        if (!alreadyExists) {
-          mergedSeats.push([row, seat]);
-        }
-      });
-
-      return {
-        ...prev,
-        session: {
-          ...prev.session,
-          purchasedSeats: mergedSeats,
-        },
-      };
+    navigate("/payment", {
+      state: {
+        movieId: selectedSession.movieId,
+        movieTitle: selectedSession.movieTitle,
+        movieRating: selectedSession.movieRating,
+        movieGenre: selectedSession.movieGenre,
+        movieDuration: selectedSession.movieDuration,
+        session: selectedSession.session,
+        seats: seatsForPayment,
+        total: sessionPrice * seatsForPayment.length,
+      },
     });
-    setChosenSeats([]);
   };
 
   const allCinemas = useMemo(() => {
@@ -157,7 +278,9 @@ export default function MainPage() {
     return moviesData
       .map((movie) => {
         const screenings = movie.screenings.filter((session) => {
-          const sessionDate = toDateKey(getDateByOffset(session.dayOffset));
+          const sessionDate = toDateKey(
+            getDateByOffset(session.dayOffset ?? 0),
+          );
           if (sessionDate !== selectedDate) return false;
 
           if (cinemaFilter !== "all" && session.cinema !== cinemaFilter)
@@ -233,6 +356,12 @@ export default function MainPage() {
       ...session,
     });
     setAdminForm({
+      targetMovieId: movie.id ?? "",
+      title: movie.title ?? "",
+      genre: movie.genre ?? "",
+      duration: movie.duration ?? "",
+      rating: movie.rating ?? "",
+      poster: movie.poster ?? "",
       dayOffset: String(session.dayOffset ?? 0),
       time: session.time ?? "",
       price: String(session.price ?? ""),
@@ -240,6 +369,7 @@ export default function MainPage() {
       hall: session.hall ?? "",
       cinema: session.cinema ?? "",
     });
+    setAdminFormError("");
     setIsAdminPanelOpen(true);
   };
 
@@ -247,10 +377,216 @@ export default function MainPage() {
     setIsAdminPanelOpen(false);
     setAdminSession(null);
     setAdminForm(emptyAdminForm);
+    setAdminFormError("");
+    setAdminCreateMode("movie");
   };
 
-  const saveAdminSession = () => {
-    if (!adminSession) return;
+  const saveAdminSession = async () => {
+    if (!adminSession) {
+      if (adminCreateMode === "session") {
+        const targetMovieId = String(adminForm.targetMovieId ?? "").trim();
+        const parsedPrice = Number(adminForm.price);
+        const requiredSessionFields = [
+          targetMovieId,
+          adminForm.time,
+          adminForm.price,
+          adminForm.format,
+          adminForm.hall,
+          adminForm.cinema,
+        ];
+        const hasEmptySessionFields = requiredSessionFields.some(
+          (value) => !String(value ?? "").trim(),
+        );
+        if (hasEmptySessionFields) {
+          setAdminFormError("Заполните все поля для нового сеанса.");
+          return;
+        }
+        if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+          setAdminFormError("Цена должна быть корректным числом.");
+          return;
+        }
+
+        const parsedMovieId = Number(targetMovieId);
+        if (!Number.isFinite(parsedMovieId) || parsedMovieId <= 0) {
+          setAdminFormError(
+            "У выбранного фильма нет серверного ID. Перезагрузите список фильмов.",
+          );
+          return;
+        }
+
+        const parsedHallId = Number(adminForm.hall);
+        if (!Number.isFinite(parsedHallId) || parsedHallId <= 0) {
+          setAdminFormError("Для сохранения на сервере укажите числовой ID зала.");
+          return;
+        }
+
+        const [hours, minutes] = String(adminForm.time).split(":").map(Number);
+        const startDate = getDateByOffset(Number(adminForm.dayOffset));
+        startDate.setHours(hours || 0, minutes || 0, 0, 0);
+        // Отправляем локальное naive-время (без timezone), т.к. БД хранит TIMESTAMP WITHOUT TIME ZONE.
+        const yyyy = startDate.getFullYear();
+        const mm = String(startDate.getMonth() + 1).padStart(2, "0");
+        const dd = String(startDate.getDate()).padStart(2, "0");
+        const hh = String(startDate.getHours()).padStart(2, "0");
+        const min = String(startDate.getMinutes()).padStart(2, "0");
+        const startTimeIso = `${yyyy}-${mm}-${dd}T${hh}:${min}:00`;
+
+        const optimisticSession = {
+          dayOffset: Number(adminForm.dayOffset),
+          time: adminForm.time.trim(),
+          price: parsedPrice,
+          format: adminForm.format.trim(),
+          hall: adminForm.hall.trim(),
+          cinema: adminForm.cinema.trim(),
+          purchasedSeats: [],
+        };
+
+        setMoviesData((prev) =>
+          prev.map((movie) => {
+            if (movie.id !== targetMovieId) return movie;
+            return {
+              ...movie,
+              screenings: [...movie.screenings, optimisticSession],
+            };
+          }),
+        );
+        try {
+          await addScreening(
+            parsedMovieId,
+            parsedHallId,
+            startTimeIso,
+            parsedPrice,
+            adminForm.format.trim(),
+          );
+
+          closeAdminPanel();
+        } catch (error) {
+          setMoviesData((prev) =>
+            prev.map((movie) => {
+              if (movie.id !== targetMovieId) return movie;
+              if (movie.screenings.length === 0) return movie;
+              return {
+                ...movie,
+                screenings: movie.screenings.slice(0, -1),
+              };
+            }),
+          );
+          const serverMessage =
+            error?.response?.data?.detail &&
+            typeof error.response.data.detail === "string"
+              ? error.response.data.detail
+              : null;
+          setAdminFormError(
+            serverMessage || "Не удалось сохранить сеанс на сервере.",
+          );
+        }
+        return;
+      }
+
+      const parsedPrice = Number(adminForm.price);
+      const requiredFields = [
+        adminForm.title,
+        adminForm.genre,
+        adminForm.duration,
+        adminForm.rating,
+        adminForm.poster,
+        adminForm.time,
+        adminForm.price,
+        adminForm.format,
+        adminForm.hall,
+        adminForm.cinema,
+      ];
+
+      const hasEmptyRequired = requiredFields.some(
+        (value) => !String(value ?? "").trim(),
+      );
+
+      if (hasEmptyRequired) {
+        setAdminFormError("Заполните все поля фильма и сеанса.");
+        return;
+      }
+
+      if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+        setAdminFormError("Цена должна быть корректным числом.");
+        return;
+      }
+
+      const parseDurationToMinutes = (value) => {
+        const raw = String(value ?? "")
+          .trim()
+          .toLowerCase();
+        if (!raw) return NaN;
+
+        // Поддержка форматов: "120", "2ч", "2ч 15м", "135м"
+        const directNumber = Number(raw);
+        if (Number.isFinite(directNumber) && directNumber > 0) {
+          return directNumber;
+        }
+
+        const hoursMatch = raw.match(/(\d+)\s*ч/);
+        const minutesMatch = raw.match(/(\d+)\s*м/);
+        const hours = hoursMatch ? Number(hoursMatch[1]) : 0;
+        const minutes = minutesMatch ? Number(minutesMatch[1]) : 0;
+        const total = hours * 60 + minutes;
+        return total > 0 ? total : NaN;
+      };
+
+      const durationMinutes = parseDurationToMinutes(adminForm.duration);
+      if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) {
+        setAdminFormError(
+          "Длительность должна быть числом минут или форматом типа 2ч 15м.",
+        );
+        return;
+      }
+
+      const parsedAgeRating = Number.parseInt(
+        String(adminForm.rating ?? "").replace(/\D/g, ""),
+        10,
+      );
+      const ageRatingForApi = Number.isFinite(parsedAgeRating)
+        ? parsedAgeRating
+        : undefined;
+
+      const tempMovieId = `movie-temp-${Date.now()}`;
+      const newMovie = {
+        id: tempMovieId,
+        title: adminForm.title.trim(),
+        genre: adminForm.genre.trim(),
+        duration: adminForm.duration.trim(),
+        rating: adminForm.rating.trim(),
+        poster: adminForm.poster.trim(),
+        screenings: [
+          {
+            dayOffset: Number(adminForm.dayOffset),
+            time: adminForm.time.trim(),
+            price: parsedPrice,
+            format: adminForm.format.trim(),
+            hall: adminForm.hall.trim(),
+            cinema: adminForm.cinema.trim(),
+            purchasedSeats: [],
+          },
+        ],
+      };
+
+      setMoviesData((prev) => [newMovie, ...prev]);
+
+      try {
+        await addMovie(
+          adminForm.title.trim(),
+          adminForm.genre.trim(),
+          durationMinutes,
+          adminForm.poster.trim(),
+          ageRatingForApi,
+        );
+        closeAdminPanel();
+      } catch {
+        setMoviesData((prev) =>
+          prev.filter((movie) => movie.id !== tempMovieId),
+        );
+        setAdminFormError("Не удалось сохранить фильм на сервере.");
+      }
+      return;
+    }
 
     setMoviesData((prev) =>
       prev.map((movie) => {
@@ -295,6 +631,7 @@ export default function MainPage() {
 
         <CinemaCardsSection
           cinemas={cinemas}
+          loading={cinemasLoading}
           activeSlides={activeSlides}
           shiftSlide={shiftSlide}
           selectCinemaFilter={selectCinemaFilter}
@@ -319,10 +656,16 @@ export default function MainPage() {
             allCinemas={allCinemas}
             dayTabs={dayTabs}
             adm={adm}
-            setAdminSession={setAdminSession}
-            setAdminForm={setAdminForm}
-            emptyAdminForm={emptyAdminForm}
-            setIsAdminPanelOpen={setIsAdminPanelOpen}
+            openAddMovie={() => {
+              setAdminSession(null);
+              setAdminForm({
+                ...emptyAdminForm,
+                targetMovieId: moviesData[0]?.id ?? "",
+              });
+              setAdminFormError("");
+              setAdminCreateMode("movie");
+              setIsAdminPanelOpen(true);
+            }}
           />
 
           <MovieScheduleSection
@@ -343,7 +686,8 @@ export default function MainPage() {
         chosenSeats={chosenSeats}
         plusChosenSeat={plusChosenSeat}
         removeChosenSeat={removeChosenSeat}
-        plusPurchasedSeats={plusPurchasedSeats}
+        isBuying={isCheckoutPending}
+        onBuy={handleCheckout}
       />
       <AdminSessionModal
         open={isAdminPanelOpen}
@@ -351,6 +695,10 @@ export default function MainPage() {
         adminSession={adminSession}
         adminForm={adminForm}
         setAdminForm={setAdminForm}
+        adminFormError={adminFormError}
+        adminCreateMode={adminCreateMode}
+        setAdminCreateMode={setAdminCreateMode}
+        movies={moviesData}
         saveAdminSession={saveAdminSession}
       />
       <DeleteMovieDialog
